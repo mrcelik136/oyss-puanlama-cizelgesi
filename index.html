@@ -546,37 +546,13 @@
         <div id="pointsInputsContainer" class="points-inputs"></div>
       </div>
 
-      <!-- EK SEÇENEKLER -->
-      <div class="options-bar">
-        <label>
-          <input type="checkbox" id="chkShowBranchInTitle" checked onchange="updateHeaders()" />
-          Başlıkta şube adını göster (Örn: 7-C Sınıfı)
-        </label>
-        <label>
-          <input type="checkbox" id="chkShowScenarioInTitle" onchange="updateHeaders()" />
-          Başlıkta senaryo numarasını da göster
-        </label>
-        <label>
-          <input type="checkbox" id="chkShowKazanimInHeader" onchange="renderTable()" />
-          Sütunlarda kazanım kodunu göster (S1 - FB.5.1.2)
-        </label>
-        <label>
-          <input type="checkbox" id="chkShowKazanimFooter" onchange="renderTable()" />
-          Sayfa altında kazanım açıklamalarını göster
-        </label>
-        <label>
-          <input type="checkbox" id="chkPadTo30" checked onchange="renderTable()" />
-          Tabloyu en az 30 satıra tamamla
-        </label>
-      </div>
-
       <div id="scenarioInfoBox" class="scenario-details-box" style="display: none;"></div>
     </div>
 
     <!-- YAZDIRILACAK KAĞIT ALANI -->
     <div class="sheet-wrapper" id="printableArea">
       <div id="sheetSchoolName" class="sheet-school-row">Cumhuriyet Ortaokulu</div>
-      <div id="sheetTitle" class="sheet-title-row">5-A Sınıfı FEN BİLİMLERİ – OYSS SINAV PUANLAMA ÇİZELGESİ</div>
+      <div id="sheetTitle" class="sheet-title-row">5-A Sınıfı FEN BİLİMLERİ (SENARYO 1) – OYSS SINAV PUANLAMA ÇİZELGESİ</div>
       <div id="sheetPointsText" class="sheet-points-row"></div>
 
       <table class="score-table" id="scoreTable">
@@ -591,8 +567,6 @@
           <div id="sheetTeacherName" class="teacher-sign-name">........................................</div>
         </div>
       </div>
-
-      <div id="printKazanimFooter" class="print-kazanim-footer" style="display: none;"></div>
     </div>
   </div>
 
@@ -774,12 +748,9 @@
     function updateHeaders() {
       const grade = getCurrentGrade();
       const courseTitle = getCourseHeaderName(state.courseId, grade);
-      const showBranch = document.getElementById("chkShowBranchInTitle").checked;
-      const showScen = document.getElementById("chkShowScenarioInTitle").checked;
-
       const branchFormatted = state.classId.replace("/", "-");
-      const classPrefix = showBranch ? `${branchFormatted} Sınıfı` : `${grade}. SINIF`;
-      const scenSuffix = (showScen && !state.scenarioKey.startsWith("manual")) ? ` (${state.scenarioKey.toLocaleUpperCase('tr-TR')})` : "";
+      const classPrefix = `${branchFormatted} Sınıfı`;
+      const scenSuffix = !state.scenarioKey.startsWith("manual") ? ` (${state.scenarioKey.toLocaleUpperCase('tr-TR')})` : "";
 
       document.getElementById("sheetSchoolName").textContent = "Cumhuriyet Ortaokulu";
       document.getElementById("sheetTitle").textContent = `${classPrefix} ${courseTitle}${scenSuffix} – OYSS SINAV PUANLAMA ÇİZELGESİ`;
@@ -900,28 +871,14 @@
     }
 
     function getActiveRows() {
-      const padTo30 = document.getElementById("chkPadTo30").checked;
-      const students = (CLASSES_DATA[state.classId]?.students || []).map(s => ({
+      return (CLASSES_DATA[state.classId]?.students || []).map(s => ({
         sno: s.sno,
         no: s.no,
         name: s.name
       }));
-      const targetLen = padTo30 ? Math.max(30, students.length) : students.length;
-      const rows = [...students];
-      while (rows.length < targetLen) {
-        rows.push({
-          sno: rows.length + 1,
-          no: "",
-          name: ""
-        });
-      }
-      return rows;
     }
 
     function renderTable() {
-      const showKazanimInHeader = document.getElementById("chkShowKazanimInHeader").checked;
-      const showKazanimFooter = document.getElementById("chkShowKazanimFooter").checked;
-
       const thead = document.getElementById("scoreTableHead");
       let headHtml = `<tr>
         <th style="width: 28px;"></th>
@@ -929,12 +886,8 @@
         <th style="width: 205px;">Öğrenci Adı Soyadı</th>`;
 
       for (let q = 0; q < state.questionCount; q++) {
-        const kCode = state.questionKazanims[q]?.code || "";
         const kFull = state.questionKazanims[q]?.full || "";
-        headHtml += `<th title="${kFull.replace(/"/g, '&quot;')}">
-          S${q + 1}
-          ${(showKazanimInHeader && kCode) ? `<span class="th-kazanim">${kCode}</span>` : ""}
-        </th>`;
+        headHtml += `<th title="${kFull.replace(/"/g, '&quot;')}">S${q + 1}</th>`;
       }
       headHtml += `<th style="width: 52px;">Toplam</th></tr>`;
       thead.innerHTML = headHtml;
@@ -959,15 +912,6 @@
         bodyHtml += `<td class="col-total" id="rowTotal_${rIdx}">${rowSum}</td></tr>`;
       });
       tbody.innerHTML = bodyHtml;
-
-      const kFooter = document.getElementById("printKazanimFooter");
-      if (showKazanimFooter && state.questionKazanims.length > 0) {
-        kFooter.style.display = "block";
-        const items = state.questionKazanims.map((k, idx) => `<div><strong>S${idx + 1} (${k.code}):</strong> ${k.desc}</div>`).join("");
-        kFooter.innerHTML = `<strong>${state.scenarioKey} Soru-Kazanım Dağılımı:</strong><div class="print-kazanim-grid">${items}</div>`;
-      } else {
-        kFooter.style.display = "none";
-      }
     }
 
     function computeRowTotal(rIdx) {
@@ -999,7 +943,6 @@
       const titleText = document.getElementById("sheetTitle").textContent;
       const pointsText = document.getElementById("sheetPointsText").textContent;
       const teacherName = document.getElementById("sheetTeacherName").textContent;
-      const showKazanimInHeader = document.getElementById("chkShowKazanimInHeader").checked;
       const rows = getActiveRows();
       const colSpanAll = state.questionCount + 4;
 
@@ -1026,8 +969,7 @@
             <th style="width:205px;">Öğrenci Adı Soyadı</th>`;
 
       for (let q = 0; q < state.questionCount; q++) {
-        const kCode = state.questionKazanims[q]?.code || "";
-        html += `<th>S${q + 1}${(showKazanimInHeader && kCode) ? `<br/><span style="font-size:7pt;font-weight:normal;">${kCode}</span>` : ""}</th>`;
+        html += `<th>S${q + 1}</th>`;
       }
       html += `<th style="width:55px;">Toplam</th></tr>`;
 
