@@ -552,7 +552,7 @@
     <!-- YAZDIRILACAK KAĞIT ALANI -->
     <div class="sheet-wrapper" id="printableArea">
       <div id="sheetSchoolName" class="sheet-school-row">Cumhuriyet Ortaokulu</div>
-      <div id="sheetTitle" class="sheet-title-row">5-A Sınıfı FEN BİLİMLERİ (SENARYO 1) – OYSS SINAV PUANLAMA ÇİZELGESİ</div>
+      <div id="sheetTitle" class="sheet-title-row">5-A SINIFI FEN BİLİMLERİ (SENARYO 1) – OYSS SINAV PUANLAMA ÇİZELGESİ</div>
       <div id="sheetPointsText" class="sheet-points-row"></div>
 
       <table class="score-table" id="scoreTable">
@@ -749,7 +749,7 @@
       const grade = getCurrentGrade();
       const courseTitle = getCourseHeaderName(state.courseId, grade);
       const branchFormatted = state.classId.replace("/", "-");
-      const classPrefix = `${branchFormatted} Sınıfı`;
+      const classPrefix = `${branchFormatted} SINIFI`;
       const scenSuffix = !state.scenarioKey.startsWith("manual") ? ` (${state.scenarioKey.toLocaleUpperCase('tr-TR')})` : "";
 
       document.getElementById("sheetSchoolName").textContent = "Cumhuriyet Ortaokulu";
