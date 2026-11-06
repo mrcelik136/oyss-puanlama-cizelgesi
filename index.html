@@ -511,8 +511,14 @@
         <div class="form-group">
           <label for="selectExam">3. Sınav Dönemi</label>
           <select id="selectExam" class="form-control" onchange="onCourseOrExamChange()">
-            <option value="1">1. Dönem 1. Ortak Yazılı Sınav</option>
-            <option value="2">1. Dönem 2. Ortak Yazılı Sınav</option>
+            <optgroup label="1. Dönem Sınavları">
+              <option value="1">1. Dönem 1. Ortak Yazılı Sınavı</option>
+              <option value="2">1. Dönem 2. Ortak Yazılı Sınavı</option>
+            </optgroup>
+            <optgroup label="2. Dönem Sınavları">
+              <option value="2_1">2. Dönem 1. Ortak Yazılı Sınavı</option>
+              <option value="2_2">2. Dönem 2. Ortak Yazılı Sınavı</option>
+            </optgroup>
           </select>
         </div>
 
@@ -682,10 +688,17 @@
           scenSelect.value = previousScenario;
         }
       } else {
-        const opt = document.createElement("option");
-        opt.value = "manual_10";
-        opt.textContent = "Ülke Geneli Sınav (Manuel Soru Sayısı)";
-        scenSelect.appendChild(opt);
+        // 2. Dönem veya Ülke Geneli sınavlar için Senaryo 1..7 seçenekleri
+        for (let i = 1; i <= 7; i++) {
+          const sName = `Senaryo ${i}`;
+          const opt = document.createElement("option");
+          opt.value = sName;
+          opt.textContent = sName;
+          scenSelect.appendChild(opt);
+        }
+        if (previousScenario && previousScenario.startsWith("Senaryo")) {
+          scenSelect.value = previousScenario;
+        }
       }
 
       const manual15 = document.createElement("option");
@@ -702,7 +715,7 @@
       const examObj = COURSES_DATA[state.courseId]?.grades[grade]?.exams[state.examId];
       const noteText = examObj?.note || "";
 
-      let qCount = 10;
+      let qCount = state.questionCount || 8;
       let kazanims = [];
 
       if (examObj?.scenarios && examObj.scenarios[state.scenarioKey]) {
@@ -711,6 +724,9 @@
         kazanims = scen.questions || [];
       } else if (state.scenarioKey === "manual_15") {
         qCount = 15;
+        kazanims = [];
+      } else {
+        qCount = parseInt(document.getElementById("inputQuestionCount").value, 10) || 8;
         kazanims = [];
       }
 
@@ -745,15 +761,26 @@
       renderTable();
     }
 
+    function getExamHeaderName(examId) {
+      const map = {
+        "1": "1. DÖNEM 1. ORTAK YAZILI SINAVI",
+        "2": "1. DÖNEM 2. ORTAK YAZILI SINAVI",
+        "2_1": "2. DÖNEM 1. ORTAK YAZILI SINAVI",
+        "2_2": "2. DÖNEM 2. ORTAK YAZILI SINAVI"
+      };
+      return map[examId] || "1. DÖNEM 1. ORTAK YAZILI SINAVI";
+    }
+
     function updateHeaders() {
       const grade = getCurrentGrade();
       const courseTitle = getCourseHeaderName(state.courseId, grade);
+      const examTitle = getExamHeaderName(state.examId);
       const branchFormatted = state.classId.replace("/", "-");
       const classPrefix = `${branchFormatted} SINIFI`;
       const scenSuffix = !state.scenarioKey.startsWith("manual") ? ` (${state.scenarioKey.toLocaleUpperCase('tr-TR')})` : "";
 
       document.getElementById("sheetSchoolName").textContent = "Cumhuriyet Ortaokulu";
-      document.getElementById("sheetTitle").textContent = `${classPrefix} ${courseTitle}${scenSuffix} – OYSS SINAV PUANLAMA ÇİZELGESİ`;
+      document.getElementById("sheetTitle").textContent = `${classPrefix} ${courseTitle} ${examTitle}${scenSuffix} – OYSS SINAV PUANLAMA ÇİZELGESİ`;
       renderSheetHeader();
     }
 
